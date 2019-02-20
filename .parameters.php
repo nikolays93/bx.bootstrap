@@ -17,12 +17,18 @@ $arComponentParameters = array(
         // ADDITIONAL_SETTINGS
 	),
 	"PARAMETERS" => array(
- //        // 'CACHE_TIME' => array('DEFAULT' => 120),
-                "BLOCKS" => array(
-                    "PARENT" => "BASE",
-                    "NAME" => "Блоки",
-                    "TYPE" => "STRING",
-                    "MULTIPLE" => "Y",
-                ),
+        // 'CACHE_TIME' => array('DEFAULT' => 120),
+        "BLOCKS" => array(
+            "PARENT" => "BASE",
+            "NAME" => "Блоки",
+            "TYPE" => "STRING",
+            "MULTIPLE" => "Y",
+        ),
+        "SHOW" => array(
+            "PARENT" => "BASE",
+            "NAME" => "Показывать блок",
+            "TYPE" => "STRING",
+            "DEFAULT" => "0",
+        ),
 	),
 );

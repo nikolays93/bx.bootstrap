@@ -37,6 +37,7 @@ class customEmptyComponent extends CBitrixComponent
     function onPrepareComponentParams($arParams)
     {
         if( !isset($arParams['BLOCKS']) || !is_array($arParams['BLOCKS']) ) $arParams['BLOCKS'] = array();
+        $arParams['SHOW'] = intval($arParams['SHOW']);
 
         return $arParams;
     }
@@ -130,8 +131,8 @@ class customEmptyComponent extends CBitrixComponent
                 'ID'   => $id,
                 'NAME' => $blockName,
                 'PATH' => $bFile->isExists() ? $bFile->getPath() : '',
-                'EXPANDED' => 1 == $i ? 'true' : 'false',
-                'CLASS' => 1 == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
+                'EXPANDED' => $this->arParams['SHOW'] == $i ? 'true' : 'false',
+                'CLASS' => $this->arParams['SHOW'] == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
                 'EDIT_LINK' => $this->getEditElementLink($bFile),
             );
         }
