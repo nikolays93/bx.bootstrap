@@ -20,7 +20,7 @@
         <div class="accordion__element">
             <a href="#<?= $block['ID'] ?>" class="btn btn-primary" data-toggle="collapse" role="button" aria-expanded="<?= $block['EXPANDED'] ?>"><?= $block['NAME'] ?></a>
             <div class="<?= $block['CLASS'] ?>" id="<?= $block['ID'] ?>" data-parent=".accordion">
-                <?= include($block['PATH']); ?>
+                <? include($block['PATH']); ?>
             </div>
         </div>
     <? endforeach; ?>
