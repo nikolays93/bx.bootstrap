@@ -15,12 +15,11 @@
 ?>
 <section class="accordion">
     <?foreach ($arResult['BLOCKS'] as $i => $block) :
-        if( empty($block['PATH']) ) continue;
-        ?>
-        <div class="accordion__element">
-            <a href="#<?= $block['ID'] ?>" class="btn btn-primary" data-toggle="collapse" role="button" aria-expanded="<?= $block['EXPANDED'] ?>"><?= $block['NAME'] ?></a>
-            <div class="<?= $block['CLASS'] ?>" id="<?= $block['ID'] ?>" data-parent=".accordion">
-                <? include($block['PATH']); ?>
+        $this->AddEditAction($block['ID'], $block['EDIT_LINK'], 'Редактировать блок');?>
+        <div class="accordion__element accordion__element--<?= $block['ID'] ?>">
+            <a href="#<?=$this->GetEditAreaId($block['ID']);?>" class="btn btn-primary" data-toggle="collapse" role="button" aria-expanded="<?= $block['EXPANDED'] ?>"><?= $block['NAME'] ?></a>
+            <div class="<?= $block['CLASS'] ?>" id="<?=$this->GetEditAreaId($block['ID']);?>" data-parent=".accordion">
+                <? if($block['PATH']) include($block['PATH']); ?>
             </div>
         </div>
     <? endforeach; ?>

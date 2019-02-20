@@ -46,7 +46,7 @@ class customEmptyComponent extends CBitrixComponent
      * @param  string $id slug filename
      * @return Bitrix\Main\IO\File
      */
-    private function getFile( $id )
+    private function getFile($id)
     {
         global $APPLICATION;
 
@@ -71,9 +71,11 @@ class customEmptyComponent extends CBitrixComponent
         return new Main\IO\File(Main\Application::getDocumentRoot() . $sFilePath . $sFileName);
     }
 
-    private function IncludeAreas($bFile, $block_name = '', $template = '')
+    private function getEditElementLink($bFile, $template = '')
     {
         global $APPLICATION, $USER;
+
+        if( !$APPLICATION->GetShowIncludeAreas() ) return '';
 
         $sFileName = $bFile->getName();
         $sFilePath = str_replace(Main\Application::getDocumentRoot(), '', $bFile->getDirectoryName()) . '/';
@@ -84,33 +86,30 @@ class customEmptyComponent extends CBitrixComponent
         $bCanEdit = $USER->CanDoFileOperation('fm_edit_existent_file', array(SITE_ID, $sFilePath.$sFileName)) && (!$bPhpFile || $GLOBALS["USER"]->CanDoFileOperation('fm_lpa', array(SITE_ID, $sFilePath.$sFileName)));
         $bCanAdd = $USER->CanDoFileOperation('fm_create_new_file', array(SITE_ID, $sFilePath.$sFileName)) && (!$bPhpFile || $GLOBALS["USER"]->CanDoFileOperation('fm_lpa', array(SITE_ID, $sFilePath.$sFileName)));
 
-        $isEdit = $bCanEdit && $bFile->isExists();
+        $editURL = '';
+        $edit = '/bitrix/admin/public_file_edit.php?';
 
-        $editor = '&site='.SITE_ID.'&back_url='.urlencode($_SERVER['REQUEST_URI']).'&templateID='.urlencode(SITE_TEMPLATE_ID);
-        $editorUrl = "/bitrix/admin/public_file_edit.php?lang=".LANGUAGE_ID."&from=main.include&template=".urlencode($template)."&path=".urlencode($sFilePath.$sFileName).$editor;
-
-        $icon = $isEdit ? 'bx-context-toolbar-edit-icon' : 'bx-context-toolbar-create-icon';
-        $title = $isEdit ? 'Редактировать ' . $block_name : 'Создать ' . $block_name;
-
-        if( !$isEdit ) $editorUrl .= "&new=Y";
-
-        $arIcon = array(
-            "URL" => 'javascript:'.$APPLICATION->GetPopupLink(
-                array(
-                    'URL' => $editorUrl,
-                    "PARAMS" => array(
-                        'width' => 770,
-                        'height' => 570,
-                        'resize' => true
-                    )
-                )
-            ),
-            "DEFAULT" => $APPLICATION->GetPublicShowMode() != 'configure',
-            "ICON" => $icon,
-            "TITLE" => $title,
+        $arGetString = array(
+            'from=bx.bootstrap',
+            'lang='       . LANGUAGE_ID,
+            'site='       . SITE_ID,
+            'template='   . urlencode($template),
+            "path="       . urlencode($sFilePath . $sFileName),
+            'back_url='   . urlencode($_SERVER['REQUEST_URI']),
+            'templateID=' . urlencode(SITE_TEMPLATE_ID),
         );
 
-        return $arIcon;
+        if( $bCanAdd && !$bFile->isExists() ) {
+            $arGetString[] = 'new=Y';
+
+            $editURL = $edit . implode('&', $arGetString);
+        }
+
+        if( $bCanEdit && $bFile->isExists() ) {
+            $editURL = $edit . implode('&', $arGetString);
+        }
+
+        return $editURL;
     }
 
     function executeComponent()
@@ -131,13 +130,10 @@ class customEmptyComponent extends CBitrixComponent
                 'ID'   => $id,
                 'NAME' => $blockName,
                 'PATH' => $bFile->isExists() ? $bFile->getPath() : '',
-                'EXPANDED' => $i ? 'false' : 'true',
-                'CLASS' => $i ? 'multi-collapse collapse' : 'multi-collapse collapse show'
+                'EXPANDED' => 1 == $i ? 'true' : 'false',
+                'CLASS' => 1 == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
+                'EDIT_LINK' => $this->getEditElementLink($bFile),
             );
-
-            if($APPLICATION->GetShowIncludeAreas()) {
-                $areas[] = $this->IncludeAreas($bFile, $blockName);
-            }
         }
 
         // $this->arResult['errors'] = $this->errors;
