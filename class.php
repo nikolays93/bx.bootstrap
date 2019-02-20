@@ -5,6 +5,8 @@ use \Bitrix\Main\Loader;
 use \Bitrix\Main\LoaderException;
 use \Bitrix\Main;
 
+if( !defined('BS_PANE_FILE_SUFFIX') ) define('BS_PANE_FILE_SUFFIX', 'pane');
+
 class customEmptyComponent extends CBitrixComponent
 {
     /** @var array */
@@ -39,20 +41,11 @@ class customEmptyComponent extends CBitrixComponent
         return $arParams;
     }
 
-    public static function esc_string($s)
-    {
-        $s = strip_tags( (string) $s);
-        $s = str_replace(array("\n", "\r"), " ", $s);
-        $s = preg_replace("/\s+/", ' ', $s);
-        $s = trim($s);
-        $s = function_exists('mb_strtolower') ? mb_strtolower($s) : strtolower($s);
-        $s = strtr($s, array('а'=>'a','б'=>'b','в'=>'v','г'=>'g','д'=>'d','е'=>'e','ё'=>'e','ж'=>'j','з'=>'z','и'=>'i','й'=>'y','к'=>'k','л'=>'l','м'=>'m','н'=>'n','о'=>'o','п'=>'p','р'=>'r','с'=>'s','т'=>'t','у'=>'u','ф'=>'f','х'=>'h','ц'=>'c','ч'=>'ch','ш'=>'sh','щ'=>'shch','ы'=>'y','э'=>'e','ю'=>'yu','я'=>'ya','ъ'=>'','ь'=>''));
-        $s = preg_replace("/[^0-9a-z-_ ]/i", "", $s);
-        $s = str_replace(" ", "-", $s);
-
-        return $s;
-    }
-
+    /**
+     * [getFile description]
+     * @param  string $id slug filename
+     * @return Bitrix\Main\IO\File
+     */
     private function getFile( $id )
     {
         global $APPLICATION;
@@ -75,12 +68,15 @@ class customEmptyComponent extends CBitrixComponent
             $sFileName = substr($sFileName, strlen($sFilePath));
         }
 
-        return array(new Main\IO\File(Main\Application::getDocumentRoot() . $sFilePath . $sFileName), $sFilePath, $sFileName);
+        return new Main\IO\File(Main\Application::getDocumentRoot() . $sFilePath . $sFileName);
     }
 
-    private function IncludeAreas($bFile, $block_name = '', $sFilePath = '', $sFileName = '', $template = '')
+    private function IncludeAreas($bFile, $block_name = '', $template = '')
     {
         global $APPLICATION, $USER;
+
+        $sFileName = $bFile->getName();
+        $sFilePath = str_replace(Main\Application::getDocumentRoot(), '', $bFile->getDirectoryName()) . '/';
 
         //need fm_lpa for every .php file, even with no php code inside
         $bPhpFile = (!$GLOBALS["USER"]->CanDoOperation('edit_php') && in_array(GetFileExtension($sFileName), GetScriptFileExt()));
@@ -121,28 +117,26 @@ class customEmptyComponent extends CBitrixComponent
     {
         global $APPLICATION;
 
-        $request = Main\Context::getCurrent()->getRequest();
-        $rDir  = $request->getRequestedPageDirectory();
-
         $areas = array();
         $this->arResult['BLOCKS'] = array();
-        foreach ($this->arParams['BLOCKS'] as $i => $block)
+        foreach ($this->arParams['BLOCKS'] as $i => $blockName)
         {
-            if( empty($block) ) continue;
+            if( empty($blockName) ) continue;
+            $i++;
 
-            $id = self::esc_string( $block );
-            list($bFile, $sFilePath, $sFileName) = $this->getFile($id);
+            $id = BS_PANE_FILE_SUFFIX . $i;
+            $bFile = $this->getFile($id);
 
             $this->arResult['BLOCKS'][] = array(
                 'ID'   => $id,
-                'NAME' => $block,
+                'NAME' => $blockName,
                 'PATH' => $bFile->isExists() ? $bFile->getPath() : '',
                 'EXPANDED' => $i ? 'false' : 'true',
                 'CLASS' => $i ? 'multi-collapse collapse' : 'multi-collapse collapse show'
             );
 
             if($APPLICATION->GetShowIncludeAreas()) {
-                $areas[] = $this->IncludeAreas($bFile, $block, $sFilePath, $sFileName);
+                $areas[] = $this->IncludeAreas($bFile, $blockName);
             }
         }
 
