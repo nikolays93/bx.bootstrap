@@ -71,7 +71,7 @@ class customEmptyComponent extends CBitrixComponent
         return new Main\IO\File(Main\Application::getDocumentRoot() . $sFilePath . $sFileName);
     }
 
-    private function getEditElementLink($bFile, $template = '')
+    private function getEditElementLink($bFile, $template = '.empty')
     {
         global $APPLICATION, $USER;
 
