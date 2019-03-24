@@ -21,21 +21,23 @@ class customEmptyComponent extends CBitrixComponent
     function __construct($component = null)
     {
         parent::__construct($component);
-
-        // try
-        // {
-        //     if(Loader::includeModule('iblock')) {
-        //         throw new LoaderException("Not exists IBlock module");
-        //     }
-        // }
-        // catch (LoaderException $exception)
-        // {
-        //     $this->errors[] = '<p style="color: #f00">' . $exception->getMessage() . '</p>';
-        // }
     }
 
     function onPrepareComponentParams($arParams)
     {
+        if( 'iblock' == $arParams['TYPE'] ) {
+            try
+            {
+                if( Loader::includeModule('iblock') ) {
+                    throw new LoaderException("Not exists IBlock module");
+                }
+            }
+            catch (LoaderException $exception)
+            {
+                $this->errors[] = '<p style="color: #f00">' . $exception->getMessage() . '</p>';
+            }
+        }
+
         if( !isset($arParams['BLOCKS']) || !is_array($arParams['BLOCKS']) ) $arParams['BLOCKS'] = array();
         $arParams['SHOW'] = intval($arParams['SHOW']);
 
@@ -119,22 +121,59 @@ class customEmptyComponent extends CBitrixComponent
 
         $areas = array();
         $this->arResult['BLOCKS'] = array();
-        foreach ($this->arParams['BLOCKS'] as $i => $blockName)
-        {
-            if( empty($blockName) ) continue;
-            $i++;
 
-            $id = BS_PANE_FILE_SUFFIX . $i;
-            $bFile = $this->getFile($id);
+        if( 'file' == $this->arParams['TYPE'] ) {
+            foreach ($this->arParams['BLOCKS'] as $i => $blockName)
+            {
+                if( empty($blockName) ) continue;
+                $i++;
 
-            $this->arResult['BLOCKS'][] = array(
-                'ID'   => $id,
-                'NAME' => $blockName,
-                'PATH' => $bFile->isExists() ? $bFile->getPath() : '',
-                'EXPANDED' => $this->arParams['SHOW'] == $i ? 'true' : 'false',
-                'CLASS' => $this->arParams['SHOW'] == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
-                'EDIT_LINK' => $this->getEditElementLink($bFile),
+                $id = BS_PANE_FILE_SUFFIX . $i;
+                $bFile = $this->getFile($id);
+
+                $content = '';
+                if( $bFile->isExists() ) {
+                    ob_start();
+                    include $bFile->getPath();
+                    $content = ob_get_clean();
+                }
+
+                $this->arResult['BLOCKS'][] = array(
+                    'ID'   => $id,
+                    'NAME' => $blockName,
+                    'CONTENT' => $content,
+                    'EXPANDED' => $this->arParams['SHOW'] == $i ? 'true' : 'false',
+                    'CLASS' => $this->arParams['SHOW'] == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
+                    'EDIT_LINK' => $this->getEditElementLink($bFile),
+                );
+            }
+        }
+        else {
+            $args = array(
+                'select' => array('ID', 'CODE', 'NAME', 'PREVIEW_TEXT'),
+                'filter' => array(
+                    '=IBLOCK_ID' => $this->arParams['IBLOCK_ID'],
+                    '=ACTIVE' => 'Y',
+                )
             );
+
+            if( !empty($this->arParams['IBLOCK_SECTION']) ) {
+                $args['filter']['=IBLOCK_SECTION_ID'] = $this->arParams['IBLOCK_SECTION'];
+            }
+
+            $iblockElements = Bitrix\Iblock\ElementTable::getList( $args )->FetchAll();
+
+            foreach ($iblockElements as $i => $iblockElement)
+            {
+                $this->arResult['BLOCKS'][] = array(
+                    'ID'   => $iblockElement['ID'],
+                    'NAME' => $iblockElement['NAME'],
+                    'CONTENT' => $iblockElement['PREVIEW_TEXT'],
+                    'EXPANDED' => $this->arParams['SHOW'] == $i ? 'true' : 'false',
+                    'CLASS' => $this->arParams['SHOW'] == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
+                    'EDIT_LINK' => '#',
+                );
+            }
         }
 
         // $this->arResult['errors'] = $this->errors;
