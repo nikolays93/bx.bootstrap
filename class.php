@@ -150,7 +150,7 @@ class customEmptyComponent extends CBitrixComponent
         }
         else {
             $args = array(
-                'select' => array('ID', 'CODE', 'NAME', 'PREVIEW_TEXT'),
+                'select' => array('ID', 'CODE', 'NAME', 'PREVIEW_TEXT', 'PREVIEW_TEXT_TYPE'),
                 'filter' => array(
                     '=IBLOCK_ID' => $this->arParams['IBLOCK_ID'],
                     '=ACTIVE' => 'Y',
@@ -168,7 +168,8 @@ class customEmptyComponent extends CBitrixComponent
                 $this->arResult['BLOCKS'][] = array(
                     'ID'   => $iblockElement['ID'],
                     'NAME' => $iblockElement['NAME'],
-                    'CONTENT' => $iblockElement['PREVIEW_TEXT'],
+                    'CONTENT' => 'text' === $iblockElement['PREVIEW_TEXT_TYPE'] ?
+                        txtToHTML($iblockElement['PREVIEW_TEXT']) : $iblockElement['PREVIEW_TEXT'],
                     'EXPANDED' => $this->arParams['SHOW'] == $i ? 'true' : 'false',
                     'CLASS' => $this->arParams['SHOW'] == $i ? 'multi-collapse collapse show' : 'multi-collapse collapse',
                     'EDIT_LINK' => '#',
